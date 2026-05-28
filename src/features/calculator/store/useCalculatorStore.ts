@@ -2,27 +2,36 @@ import { create } from 'zustand';
 import { BbqParameters, ItemCategory, GuestType } from '@/core/types/bbq';
 import { calculateBbqRequirements } from '@/core/utils/calculator';
 
-/**
- * State definition for the MeatMatch BBQ Calculator.
- * Represents both the reactive input data and the calculated output requirements.
- */
 interface CalculatorState {
-  // State variables
   guestCount: Record<GuestType, number>;
   selectedMeats: ItemCategory[];
   selectedDrinks: ItemCategory[];
   durationInHours: number;
   results: Record<string, number>;
-
-  // Actions / Mutations
+  
+  // New Financial State
+  unitPrices: Record<string, number>;
+  
   updateGuestCount: (type: GuestType, count: number) => void;
   toggleMeat: (meat: ItemCategory) => void;
   toggleDrink: (drink: ItemCategory) => void;
   updateDuration: (hours: number) => void;
+  updateUnitPrice: (item: string, price: number) => void;
   resetCalculator: () => void;
 }
 
-// Initial state baseline for clean resets and defaults
+// Default estimated prices (Currency agnostic, but modeled around realistic regional BRL values for the MVP)
+const DEFAULT_PRICES: Record<string, number> = {
+  beef: 45.00,      // per kg
+  pork: 25.00,      // per kg
+  chicken: 20.00,   // per kg
+  sausage: 28.00,   // per kg
+  garlic_bread: 35.00, // per kg
+  coal: 6.00,       // per kg
+  beer: 12.00,      // per liter
+  soda: 6.00,       // per liter
+};
+
 const INITIAL_PARAMETERS: BbqParameters = {
   guestCount: {
     adult_male: 0,
@@ -31,25 +40,18 @@ const INITIAL_PARAMETERS: BbqParameters = {
   },
   selectedMeats: [],
   selectedDrinks: [],
-  durationInHours: 4, // Default standard event duration
+  durationInHours: 4,
 };
 
-/**
- * Zustand store executing the state management for the calculator feature.
- * Automatically recalculates domain requirements on every user interaction
- * to achieve reactive real-time UI updates.
- */
 export const useCalculatorStore = create<CalculatorState>((set, get) => ({
   ...INITIAL_PARAMETERS,
   results: {},
+  unitPrices: DEFAULT_PRICES,
 
   updateGuestCount: (type, count) => {
-    // Ensure we don't allow negative guest counts
     const sanitizedCount = Math.max(0, count);
-    
     set((state) => {
       const nextGuestCount = { ...state.guestCount, [type]: sanitizedCount };
-      
       return {
         guestCount: nextGuestCount,
         results: calculateBbqRequirements({
@@ -101,9 +103,7 @@ export const useCalculatorStore = create<CalculatorState>((set, get) => ({
   },
 
   updateDuration: (hours) => {
-    // Restrict duration bounds reasonably (e.g., between 1 and 24 hours)
     const sanitizedHours = Math.min(24, Math.max(1, hours));
-
     set((state) => ({
       durationInHours: sanitizedHours,
       results: calculateBbqRequirements({
@@ -115,10 +115,22 @@ export const useCalculatorStore = create<CalculatorState>((set, get) => ({
     }));
   },
 
+  // New action to handle price changes
+  updateUnitPrice: (item, price) => {
+    const sanitizedPrice = Math.max(0, price);
+    set((state) => ({
+      unitPrices: {
+        ...state.unitPrices,
+        [item]: sanitizedPrice,
+      }
+    }));
+  },
+
   resetCalculator: () => {
     set({
       ...INITIAL_PARAMETERS,
       results: {},
+      unitPrices: DEFAULT_PRICES,
     });
   },
 }));

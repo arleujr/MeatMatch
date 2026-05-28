@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
+import { Header } from "@/shared/components/Header";
 
 // Optimizing fonts locally via next/font
 const inter = Inter({ 
@@ -28,8 +29,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${jakarta.variable}`}>
       <body className="min-h-screen bg-background text-text-main font-inter selection:bg-primary/30">
-        {/* Main wrapper for the application */}
-        <main className="max-w-screen-md mx-auto px-4 py-8 md:py-12 flex flex-col min-h-screen">
+        <main className="max-w-screen-md mx-auto px-4 pb-12 flex flex-col min-h-screen">
+          {/* Injecting the global header here */}
+          <Header />
           {children}
         </main>
       </body>

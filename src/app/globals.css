@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-@theme {
+:root {
   /* Brand Colors - Dark Mode Sophistication */
   --color-background: #0f172a; /* Slate 900 */
   --color-surface: #1e293b; /* Slate 800 */
